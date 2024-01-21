@@ -45,24 +45,21 @@ func main() {
 		log.Println("Error loading .env file")
 	}
 
-	assetBaseURL := os.Getenv("ASSET_BASE_URL")
-
 	app := pocketbase.New()
 
 	// Share photos by tag ID
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.GET("/:tag", func(c echo.Context) error {
-			photos, err := getPhotosByTag(app, c, assetBaseURL)
+			photos, tagName, err := getPhotosByTag(app, c)
 			if err != nil {
 				return err
 			}
 
-			appName := app.App.Settings().Meta.AppName
 			registry := template.NewRegistry()
 
 			data := map[string]any{
-				"appName": appName,
-				"photos":  photos,
+				"title":  tagName,
+				"photos": photos,
 			}
 
 			html, err := registry.LoadFiles("views/gallery.html").Render(data)
@@ -73,7 +70,7 @@ func main() {
 		})
 
 		e.Router.GET("/:tag/json", func(c echo.Context) error {
-			photos, err := getPhotosByTag(app, c, assetBaseURL)
+			photos, _, err := getPhotosByTag(app, c)
 			if err != nil {
 				return err
 			}
@@ -108,17 +105,28 @@ func main() {
 	}
 }
 
-func getPhotosByTag(app *pocketbase.PocketBase, c echo.Context, assetBaseURL string) (photos []Photo, err error) {
-	tag := c.PathParam("tag")
+func getPhotosByTag(app *pocketbase.PocketBase, c echo.Context) (photos []Photo, tagName string, err error) {
+	assetBaseURL := os.Getenv("ASSET_BASE_URL")
+	if assetBaseURL == "" {
+		assetBaseURL = fmt.Sprintf("%s/api/files/photos", app.App.Settings().Meta.AppUrl)
+	}
+
+	tagID := c.PathParam("tag")
 	sort := "id"
 	limit, er := strconv.Atoi(c.PathParam("limit"))
 	if er != nil {
 		limit = DefaultLimit
 	}
 
+	tag, err := app.Dao().FindRecordById(TagCollection, tagID)
+	if err != nil {
+		return
+	}
+	tagName = tag.GetString("name")
+
 	records, err := app.Dao().FindRecordsByFilter(
 		PhotoCollection,
-		fmt.Sprintf(`(%s.id="%s")`, TagCollection, tag),
+		fmt.Sprintf(`(%s.id="%s")`, TagCollection, tagID),
 		sort,
 		limit,
 		DefaultOffset,
