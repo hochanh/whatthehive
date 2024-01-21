@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>{{ .appName }}</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.css">
+</head>
+
+<body>
+
+<div class="pswp-gallery" id="my-gallery">
+  {{ range $index, $photo := .photos }}
+  <a
+    href="{{ $photo.URL }}"
+    data-pswp-width="{{ $photo.Width }}"
+    data-pswp-height="{{ $photo.Height }}"
+    target="_blank"
+  >
+    <img
+      src="{{ $photo.URL }}"
+      alt="Image {{ $index }}"
+      width="300"
+    />
+  </a>
+  {{ end }}
+</div>
+
+<script type="module">
+  import PhotoSwipeLightbox from 'https://unpkg.com/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+  import PhotoSwipe from 'https://unpkg.com/photoswipe@5.4.3/dist/photoswipe.esm.js';
+
+  const lightbox = new PhotoSwipeLightbox({
+    gallery: '#my-gallery',
+    children: 'a',
+    pswpModule: PhotoSwipe ,
+  });
+
+  lightbox.init();
+</script>
+</body>
+</html>
