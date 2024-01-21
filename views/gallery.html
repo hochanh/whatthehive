@@ -9,16 +9,17 @@
 <body>
 
 <div class="pswp-gallery" id="my-gallery">
-  {{ range $photo := .photos }}
+  {{ range $index, $photo := .photos }}
   <a
     href="{{ $photo.URL }}"
-    data-pswp-width="500"
+    data-pswp-width="{{ $photo.Width }}"
+    data-pswp-height="{{ $photo.Height }}"
     target="_blank"
   >
     <img
       src="{{ $photo.URL }}"
-      alt=""
-      width="500"
+      alt="Image {{ $index }}"
+      width="300"
     />
   </a>
   {{ end }}
