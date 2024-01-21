@@ -29,3 +29,7 @@ JSON response should work with [Whatthefoto][1] app.
 
 [0]: https://github.com/pocketbase/pocketbase
 [1]: https://github.com/manhtai/whatthefoto
+
+---
+
+&copy; 2024 Tai Vo
