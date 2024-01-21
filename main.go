@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/template"
 	_ "golang.org/x/image/bmp"
+	"html/template"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -20,6 +22,9 @@ import (
 	"strconv"
 	"time"
 )
+
+//go:embed views/*.html
+var tplFS embed.FS
 
 const (
 	PhotoCollection = "photos"
@@ -49,24 +54,30 @@ func main() {
 
 	// Share photos by tag ID
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		t, err := template.New("gallery.html").ParseFS(tplFS, "views/gallery.html")
+		if err != nil {
+			return err
+		}
+
 		e.Router.GET("/:tag", func(c echo.Context) error {
 			photos, tagName, err := getPhotosByTag(app, c)
 			if err != nil {
 				return err
 			}
 
-			registry := template.NewRegistry()
-
 			data := map[string]any{
 				"title":  tagName,
 				"photos": photos,
 			}
 
-			html, err := registry.LoadFiles("views/gallery.html").Render(data)
+			wr := new(bytes.Buffer)
+
+			err = t.Execute(wr, data)
 			if err != nil {
 				return err
 			}
-			return c.HTML(http.StatusOK, html)
+
+			return c.HTML(http.StatusOK, wr.String())
 		})
 
 		e.Router.GET("/:tag/json", func(c echo.Context) error {
