@@ -1,23 +1,18 @@
 package main
 
 import (
-	"bytes"
-	"embed"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/template"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"text/template"
 	"time"
 )
-
-//go:embed *.html
-var tplFS embed.FS
 
 const (
 	PhotoCollection = "photos"
@@ -51,7 +46,15 @@ func main() {
 				return err
 			}
 
-			html, err := generateGallery(app, photos)
+			appName := app.App.Settings().Meta.AppName
+			registry := template.NewRegistry()
+
+			data := map[string]any{
+				"appName": appName,
+				"photos":  photos,
+			}
+
+			html, err := registry.LoadFiles("views/gallery.html").Render(data)
 			if err != nil {
 				return err
 			}
@@ -106,27 +109,5 @@ func getPhotosByTag(app *pocketbase.PocketBase, c echo.Context, assetBaseURL str
 		}
 	}
 
-	return
-}
-
-func generateGallery(app *pocketbase.PocketBase, photos []Photo) (html string, err error) {
-	appName := app.App.Settings().Meta.AppName
-
-	tpl, err := template.New("gallery.html").ParseFS(tplFS, "gallery.html")
-	if err != nil {
-		return
-	}
-
-	data := map[string]interface{}{
-		"appName": appName,
-		"photos":  photos,
-	}
-
-	wr := bytes.NewBuffer([]byte{})
-	if err = tpl.Execute(wr, data); err != nil {
-		return
-	}
-
-	html = wr.String()
 	return
 }
