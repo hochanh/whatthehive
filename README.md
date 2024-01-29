@@ -19,11 +19,6 @@ Simple photo sharing web app with a RESTful API, based on [PocketBase][0]
 - HTML: `/:tag_id`
 - JSON: `/:tag_id/json`
 
-## Demo
-
-- Gallery: https://whatthehive.fly.dev/g4helhbhxuhncg9
-- JSON: https://whatthehive.fly.dev/g4helhbhxuhncg9/json
-
 
 JSON response should work with [Whatthefoto][1] app.
 
